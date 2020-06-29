@@ -3,24 +3,26 @@
 # build and deploy Fission to Kubernetes cluster.
 ############## Usage ##############
 # Skaffold CLI should be installed on your machine. 
-# Replace <DOCKERHUB_REPO> with your registry repo/org name
+# Replace vishalbiyani with your registry repo/org name
 # Run `TAG=1313 skaffold run` to build and deploy with helm - where replace value of tag to what you want to use as tag for image
 # Run`skaffold build` to only build and push images
 ############## Future Improvement/Limitations ##############
 # 1) [LOW]  Add profiles to suit various deployment needs
 ####################################
-apiVersion: skaffold/v2beta1
+apiVersion: skaffold/v2beta4
 kind: Config
 build:
+  local:
+    push: true
   artifacts:
-    - image: <DOCKERHUB_REPO>/fission
+    - image: vishalbiyani/fission
       context: .
       docker:
         dockerfile: cmd/fission-bundle/Dockerfile.fission-bundle
-    - image: <DOCKERHUB_REPO>/fetcher
+    - image: vishalbiyani/fetcher
       docker:
         dockerfile: cmd/fetcher/Dockerfile.fission-fetcher
-    - image: <DOCKERHUB_REPO>/preupgradechecks
+    - image: vishalbiyani/preupgradechecks
       docker:
         dockerfile: cmd/preupgradechecks/Dockerfile.fission-preupgradechecks
   tagPolicy:
@@ -29,20 +31,29 @@ build:
 
 deploy:
   helm:
+    flags:
+      upgrade:
+        - --install
+        - --timeout=10m
+      install:
+        - --timeout=10m
     releases:
       - name: fission
         chartPath: ./charts/fission-all
         valuesFiles:
           - ./charts/fission-all/values.yaml
         namespace: "fission"
+        artifactOverrides:
+#          image: vishalbiyani/fission
+#          preUpgradeChecksImage: vishalbiyani/preupgradechecks
+#          fetcher.image: vishalbiyani/fetcher
         setValues:
           namespace: fission
-          repository: index.docker.io
+          image: vishalbiyani/fission
+          preUpgradeChecksImage: vishalbiyani/preupgradechecks
+          fetcher.image: vishalbiyani/fetcher        
         # The env template values only should go in setValueTemplates, all other overrides in setValues
         setValueTemplates:
-          image: <DOCKERHUB_REPO>/fission
-          preUpgradeChecksImage: <DOCKERHUB_REPO>/preupgradechecks
-          fetcher.image: <DOCKERHUB_REPO>/fetcher
           fetcher.imageTag: "{{.TAG}}"
           imageTag: "{{.TAG}}"
         wait: true
@@ -51,3 +62,4 @@ deploy:
         imageStrategy:
           fqn: null
           helm: null
+    
