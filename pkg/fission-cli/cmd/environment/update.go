@@ -104,10 +104,9 @@ func updateExistingEnvironmentWithCmd(env *fv1.Environment, input cli.Input) (*f
 	}
 
 	if input.IsSet(flagkey.EnvPoolsize) {
-		if input.Int(flagkey.EnvPoolsize) > 0 {
-			env.Spec.Poolsize = input.Int(flagkey.EnvPoolsize)
-		} else {
-			e = multierror.Append(e, errors.New("poolsize should be a positive integer value"))
+		env.Spec.Poolsize = input.Int(flagkey.EnvPoolsize)
+		if env.Spec.Poolsize == 0 {
+			e = multierror.Append(e, errors.New("poolsize value should be a greater than 0"))
 		}
 	}
 
