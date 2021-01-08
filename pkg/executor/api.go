@@ -23,6 +23,9 @@ import (
 	"net/http"
 	"strings"
 
+	"net/http/pprof"
+	_ "net/http/pprof"
+
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -240,6 +243,18 @@ func (executor *Executor) GetHandler() http.Handler {
 	r.HandleFunc("/v2/tapServices", executor.tapServices).Methods("POST")
 	r.HandleFunc("/healthz", executor.healthHandler).Methods("GET")
 	r.HandleFunc("/v2/unTapService", executor.unTapService).Methods("POST")
+
+	r.HandleFunc("/debug/pprof/", pprof.Index).Methods("GET")
+	r.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline).Methods("GET")
+	r.HandleFunc("/debug/pprof/profile", pprof.Profile).Methods("GET")
+	r.HandleFunc("/debug/pprof/symbol", pprof.Symbol).Methods("GET")
+	r.HandleFunc("/debug/pprof/trace", pprof.Trace).Methods("GET")
+	r.HandleFunc("/debug/pprof/allocs", pprof.Handler("allocs").ServeHTTP).Methods("GET")
+	r.HandleFunc("/debug/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP).Methods("GET")
+	r.HandleFunc("/debug/pprof/heap", pprof.Handler("heap").ServeHTTP).Methods("GET")
+	r.HandleFunc("/debug/pprof/mutex", pprof.Handler("mutex").ServeHTTP).Methods("GET")
+	r.HandleFunc("/debug/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP).Methods("GET")
+	r.HandleFunc("/debug/pprof/block", pprof.Handler("block").ServeHTTP).Methods("GET")
 	return r
 }
 
